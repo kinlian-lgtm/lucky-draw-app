@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🎰 Casino Lucky Draw 🎰</title>
+
+<style>
+body {
+    font-family: Arial, sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    margin: 0;
+    background: radial-gradient(circle,#000000,#7b0000,#000000);
+    color: gold;
+    overflow: hidden;
+}
+
+h1 {
+    font-size: 28px;
+    text-shadow: 0 0 15px gold;
+}
+
+input {
+    padding: 10px;
+    font-size: 18px;
+    width: 140px;
+    text-align: center;
+    border-radius: 10px;
+    border: none;
+}
+
+button {
+    padding: 12px 24px;
+    font-size: 20px;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    background: gold;
+    color: black;
+    margin-left: 10px;
+    font-weight: bold;
+    box-shadow: 0 0 20px gold;
+}
+
+#result {
+    margin-top: 50px;
+    font-size: 150px;
+    font-weight: bold;
+    text-align: center;
+    color: gold;
+    text-shadow: 0 0 25px gold, 0 0 50px red;
+}
+
+.spinDice {
+    animation: rotateDice 0.5s linear infinite;
+}
+
+@keyframes rotateDice {
+    0% { transform: rotate(0deg) scale(1); }
+    50% { transform: rotate(180deg) scale(1.3); }
+    100% { transform: rotate(360deg) scale(1); }
+}
+
+.flash {
+    animation: flash 0.6s ease;
+}
+
+@keyframes flash {
+    0% { transform: scale(0.2); opacity: 0; }
+    70% { transform: scale(1.4); }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+.controls { margin-top: 15px; }
+</style>
+</head>
+<body>
+
+<h1>LUCKY DRAW</h1>
+
+<div>
+    <input type="number" id="maxValue" placeholder="Enter X" min="1">
+    <button onclick="generateNumber()">SPIN</button>
+</div>
+
+<div class="controls">
+    <label><input type="checkbox" id="soundToggle" checked> Sound</label>
+</div>
+
+<div id="result">🎲</div>
+
+<script>
+let audioCtx;
+
+function initAudio() {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+}
+
+function playTick() {
+    initAudio();
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = 'square';
+    osc.frequency.setValueAtTime(200 + Math.random()*400, audioCtx.currentTime);
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.1);
+    osc.start();
+    osc.stop(audioCtx.currentTime + 0.1);
+}
+
+function playDrumRoll() {
+    initAudio();
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(100, audioCtx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(800, audioCtx.currentTime + 1);
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    gain.gain.setValueAtTime(0.4, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 1);
+    osc.start();
+    osc.stop(audioCtx.currentTime + 1);
+}
+
+function playJackpot() {
+    initAudio();
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(900, audioCtx.currentTime);
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    gain.gain.setValueAtTime(0.5, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.8);
+    osc.start();
+    osc.stop(audioCtx.currentTime + 0.8);
+}
+
+const diceFaces = ["🎲","⚀","⚁","⚂","⚃","⚄","⚅"];
+
+function generateNumber() {
+    const max = parseInt(document.getElementById("maxValue").value);
+    if (isNaN(max) || max < 1) {
+        alert("Enter valid number > 0");
+        return;
+    }
+
+    const result = document.getElementById("result");
+    result.classList.add("spinDice");
+
+    let spinTime = 0;
+
+    const diceInterval = setInterval(() => {
+        result.textContent = diceFaces[Math.floor(Math.random()*diceFaces.length)];
+        if (document.getElementById("soundToggle").checked) playTick();
+        spinTime += 100;
+
+        if (spinTime >= 5000) {
+            clearInterval(diceInterval);
+            result.classList.remove("spinDice");
+
+            if (document.getElementById("soundToggle").checked) playDrumRoll();
+
+            setTimeout(() => {
+                const randomNumber = Math.floor(Math.random() * max) + 1;
+                result.textContent = randomNumber;
+                result.classList.add("flash");
+
+                if (document.getElementById("soundToggle").checked) playJackpot();
+            }, 1000);
+        }
+    }, 100);
+}
+</script>
+
+</body>
+</html>
