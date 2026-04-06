@@ -14,7 +14,118 @@ body {
     justify-content: center;
     height: 100vh;
     margin: 0;
-    background: radial-gradient(circle,#000000,#7b0000,#000000);
+    background: radial-gradient<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lucky Draw - Cast Edition</title>
+    <style>
+        /* Basic styling for the Cast Button */
+        #castBtn {
+            background-color: #4285f4;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 10px;
+        }
+        #castBtn.connected { background-color: #0f9d58; }
+    </style>
+</head>
+<body>
+
+    <div id="controls">
+        <button id="castBtn">Cast to TV</button>
+        <textarea id="nameInput" placeholder="Enter names here..."></textarea>
+        <button id="drawBtn" onclick="triggerDraw()">Start Lucky Draw</button>
+    </div>
+
+    <div id="displayArea">
+        <h1 id="winner">Who is the winner?</h1>
+    </div>
+
+    <script>
+        let presentationConnection;
+        const castBtn = document.getElementById('castBtn');
+        const nameInput = document.getElementById('nameInput');
+
+        // --- 1. SENDER LOGIC (Phone) ---
+        const presentationRequest = new PresentationRequest(['./index.html']);
+
+        castBtn.addEventListener('click', () => {
+            presentationRequest.start()
+                .then(connection => {
+                    presentationConnection = connection;
+                    castBtn.textContent = "Connected to TV";
+                    castBtn.classList.add('connected');
+                    
+                    // Sync current names immediately upon connection
+                    syncData();
+                })
+                .catch(err => console.log('Cast cancelled or failed', err));
+        });
+
+        function syncData() {
+            if (presentationConnection && presentationConnection.state === 'connected') {
+                presentationConnection.send(JSON.stringify({
+                    type: 'SYNC_NAMES',
+                    names: nameInput.value
+                }));
+            }
+        }
+
+        // Auto-sync when user types names
+        nameInput.addEventListener('input', syncData);
+
+        function triggerDraw() {
+            // Local draw logic
+            performDraw();
+
+            // Tell the TV to draw too
+            if (presentationConnection) {
+                presentationConnection.send(JSON.stringify({ type: 'START_DRAW' }));
+            }
+        }
+
+        // --- 2. RECEIVER LOGIC (TV) ---
+        if (navigator.presentation && navigator.presentation.receiver) {
+            // Hide controls on the TV screen for a cleaner look
+            document.getElementById('controls').style.display = 'none';
+
+            navigator.presentation.receiver.connectionList.then(list => {
+                list.connections.forEach(connection => {
+                    connection.onmessage = (event) => {
+                        const data = JSON.parse(event.data);
+                        if (data.type === 'SYNC_NAMES') {
+                            nameInput.value = data.names;
+                        }
+                        if (data.type === 'START_DRAW') {
+                            performDraw();
+                        }
+                    };
+                });
+            });
+        }
+
+        // --- 3. CORE APP LOGIC (The actual drawing) ---
+        function performDraw() {
+            const names = nameInput.value.split('\n').filter(n => n.trim() !== '');
+            if (names.length === 0) return;
+            
+            const winnerDisplay = document.getElementById('winner');
+            winnerDisplay.textContent = "Drawing...";
+            
+            setTimeout(() => {
+                const randomIndex = Math.floor(Math.random() * names.length);
+                winnerDisplay.textContent = "Winner: " + names[randomIndex];
+            }, 2000); // 2-second animation delay
+        }
+    </script>
+</body>
+</html>
+circle,#000000,#7b0000,#000000);
     color: gold;
     overflow: hidden;
 }
