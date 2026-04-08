@@ -18,6 +18,10 @@
               --accent-strong: #43a047;
           }
 
+          ::placeholder {
+            color: white;
+          }
+
           * {
               box-sizing: border-box;
           }
@@ -383,15 +387,46 @@
                   clearInterval(rollingInterval);
                   rollingInterval = null;
                 }
-                winnerDisplay.textContent = "Drawing...";
+                winnerDisplay.innerHTML = `<picture>
+  <source srcset="https://fonts.gstatic.com/s/e/notoemoji/latest/1f941/512.webp" type="image/webp">
+  <img src="https://fonts.gstatic.com/s/e/notoemoji/latest/1f941/512.gif" alt="🥁" width="32" height="32">
+</picture>`;
                 nameSpinner.hidden = false;
-                winnerDisplay.classList.add("spinDice");
+                // winnerDisplay.classList.add("spinDice");
                 rollingInterval = setTimeout(() => {
-                  winnerDisplay.classList.remove("spinDice");
+                  // winnerDisplay.classList.remove("spinDice");
                   nameSpinner.hidden = true;
                   winnerDisplay.textContent = "Winner: " + data.winner;
                   rollingInterval = null;
                 }, 2000);
+              }
+              if (data.type === "START_SPIN") {
+                const result = document.getElementById("result");
+                const spinner = document.getElementById("numberSpinner");
+                if (rollingInterval) {
+                  clearInterval(rollingInterval);
+                  rollingInterval = null;
+                }
+                spinner.classList.remove("hidden");
+                result.innerHTML = `<picture>
+  <source srcset="https://fonts.gstatic.com/s/e/notoemoji/latest/1f3b2/512.webp" type="image/webp">
+  <img src="https://fonts.gstatic.com/s/e/notoemoji/latest/1f3b2/512.gif" alt="🎲" width="96" height="96">
+</picture>`;
+                let spinTime = 0;
+                rollingInterval = setInterval(() => {
+                  spinTime += 100;
+                  if (spinTime >= 2500) {
+                    clearInterval(rollingInterval);
+                    rollingInterval = null;
+                    spinner.classList.add("hidden");
+                  }
+                }, 100);
+              }
+              if (data.type === "SPIN_RESULT") {
+                const result = document.getElementById("result");
+                result.textContent = data.number;
+                result.classList.add("flash");
+                setTimeout(() => result.classList.remove("flash"), 800);
               }
             };
           });
@@ -486,7 +521,10 @@
         }
         const result = document.getElementById("result");
         const spinner = document.getElementById("numberSpinner");
-        spinner.hidden = false;
+        spinner.classList.remove("hidden");
+        if (presentationConnection) {
+          presentationConnection.send(JSON.stringify({ type: "START_SPIN" }));
+        }
         result.innerHTML = `<picture>
               <source srcset="https://fonts.gstatic.com/s/e/notoemoji/latest/1f3b2/512.webp" type="image/webp">
               <img src="https://fonts.gstatic.com/s/e/notoemoji/latest/1f3b2/512.gif" alt="🎲" width="96" height="96">
@@ -497,7 +535,7 @@
           spinTime += 100;
           if (spinTime >= 2500) {
             clearInterval(spinInterval);
-            spinner.hidden = true;
+            spinner.classList.add("hidden");
             if (document.getElementById("soundToggle").checked) playDrumRoll();
             setTimeout(() => {
               const randomNumber = Math.floor(Math.random() * max) + 1;
@@ -505,6 +543,11 @@
               result.classList.add("flash");
               if (document.getElementById("soundToggle").checked) playJackpot();
               setTimeout(() => result.classList.remove("flash"), 800);
+              if (presentationConnection) {
+                presentationConnection.send(
+                  JSON.stringify({ type: "SPIN_RESULT", number: randomNumber }),
+                );
+              }
             }, 300);
           }
         }, 100);
