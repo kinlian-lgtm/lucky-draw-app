@@ -1,199 +1,518 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>🎰 Casino Lucky Draw 🎰</title>
-<style>
-    body {
-        font-family: Arial, sans-serif;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        min-height: 100vh;
-        margin: 0;
-        background: radial-gradient(circle at top, #ffda4d 0%, #d33 50%, #000 100%);
-        color: gold;
-        text-align: center;
-    }
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Lucky Draw - Cast Edition</title>
+    <style>
+          :root {
+              color-scheme: dark;
+              --bg-start: #ffcc4d;
+              --bg-mid: #d32b2b;
+              --bg-end: #220606;
+              --panel: rgba(255, 255, 255, 0.12);
+              --panel-border: rgba(255, 255, 255, 0.18);
+              --button: #ffd600;
+              --button-text: #1a1a1a;
+              --accent: #1e88e5;
+              --accent-strong: #43a047;
+          }
 
-    h1 {
-        margin: 0 0 24px;
-        font-size: 3rem;
-        text-shadow: 0 0 15px rgba(255, 215, 0, 0.8);
-    }
+          * {
+              box-sizing: border-box;
+          }
 
-    .form-row {
-        display: flex;
-        gap: 12px;
-        align-items: center;
-        margin-bottom: 16px;
-        flex-wrap: wrap;
-        justify-content: center;
-    }
+          body {
+              margin: 0;
+              min-height: 100vh;
+              font-family: "Segoe UI", Arial, sans-serif;
+              color: white;
+              background: radial-gradient(circle at top, var(--bg-start) 0%, var(--bg-mid) 45%, var(--bg-end) 100%);
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              padding: 24px;
+          }
 
-    input[type="number"] {
-        padding: 12px 14px;
-        font-size: 1rem;
-        width: 180px;
-        border-radius: 12px;
-        border: none;
-        outline: none;
-        box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.2);
-    }
+          main {
+              width: min(100%, 960px);
+              display: grid;
+              gap: 28px;
+          }
 
-    button {
-        padding: 12px 24px;
-        font-size: 1rem;
-        border: none;
-        border-radius: 12px;
-        cursor: pointer;
-        background: gold;
-        color: black;
-        font-weight: bold;
-        box-shadow: 0 0 20px rgba(255, 215, 0, 0.6);
-    }
+          header {
+              text-align: center;
+          }
 
-    .controls {
-        margin-bottom: 24px;
-        font-size: 1rem;
-    }
+          header h1 {
+              margin: 0;
+              font-size: clamp(2.4rem, 5vw, 4rem);
+              letter-spacing: 0.12em;
+              text-transform: uppercase;
+              color: #ffe94d;
+              text-shadow: 0 0 20px rgba(255, 255, 255, 0.35);
+          }
 
-    #result {
-        min-width: 220px;
-        min-height: 180px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin-top: 16px;
-        font-size: 5rem;
-        font-weight: bold;
-        text-shadow: 0 0 25px gold, 0 0 50px crimson;
-    }
+          header p {
+              margin: 10px auto 0;
+              max-width: 680px;
+              line-height: 1.6;
+              color: rgba(255, 255, 255, 0.88);
+              font-size: 1rem;
+          }
 
-    .spinDice {
-        animation: rotateDice 0.5s linear infinite;
-    }
+          section {
+              background: var(--panel);
+              border: 1px solid var(--panel-border);
+              border-radius: 28px;
+              padding: 28px;
+              box-shadow: 0 24px 80px rgba(0, 0, 0, 0.28);
+              backdrop-filter: blur(12px);
+          }
 
-    @keyframes rotateDice {
-        0% { transform: rotate(0deg) scale(1); }
-        50% { transform: rotate(180deg) scale(1.15); }
-        100% { transform: rotate(360deg) scale(1); }
-    }
+          .section-title {
+              margin: 0 0 20px;
+              font-size: 1.3rem;
+              color: #fff;
+              text-align: center;
+          }
 
-    .flash {
-        animation: flash 0.6s ease;
-    }
+          #controls,
+          .form-row,
+          .section-footer {
+              display: flex;
+              flex-wrap: wrap;
+              gap: 16px;
+              justify-content: center;
+              align-items: center;
+          }
 
-    @keyframes flash {
-        0% { transform: scale(0.2); opacity: 0; }
-        70% { transform: scale(1.4); }
-        100% { transform: scale(1); opacity: 1; }
-    }
-</style>
-</head>
-<body>
-    <h1>LUCKY DRAW</h1>
+          textarea,
+          input[type="number"] {
+              width: min(100%, 420px);
+              max-width: 100%;
+              border: 1px solid rgba(255, 255, 255, 0.18);
+              border-radius: 18px;
+              padding: 16px;
+              font-size: 1rem;
+              outline: none;
+              background: rgba(255, 255, 255, 0.08);
+              color: white;
+              box-shadow: inset 0 12px 24px rgba(0, 0, 0, 0.2);
+          }
 
-    <div class="form-row">
-        <input type="number" id="maxValue" placeholder="Enter X" min="1">
-        <button id="spinBtn">SPIN</button>
-    </div>
+          textarea {
+              min-height: 140px;
+              resize: vertical;
+          }
 
-    <div class="controls">
-        <label><input type="checkbox" id="soundToggle" checked> Sound</label>
-    </div>
+          button {
+              min-width: 120px;
+              border: none;
+              border-radius: 18px;
+              padding: 14px 24px;
+              font-size: 1rem;
+              font-weight: 700;
+              cursor: pointer;
+              transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+              box-shadow: 0 16px 40px rgba(0, 0, 0, 0.25);
+          }
 
-    <div id="result">🎲</div>
+          button:hover {
+              transform: translateY(-1px);
+              box-shadow: 0 20px 45px rgba(0, 0, 0, 0.32);
+          }
+
+          button:active {
+              transform: translateY(0);
+          }
+
+          #castBtn {
+              background: var(--accent);
+              color: white;
+          }
+
+          #castBtn.connected {
+              background: var(--accent-strong);
+          }
+
+          #drawBtn,
+          #spinBtn {
+              background: linear-gradient(135deg, var(--button) 0%, #ffb200 100%);
+              color: var(--button-text);
+          }
+
+          .controls label {
+              display: inline-flex;
+              align-items: center;
+              gap: 10px;
+              color: rgba(255, 255, 255, 0.9);
+              cursor: pointer;
+              font-size: 0.98rem;
+          }
+
+          .controls input[type="checkbox"] {
+              width: 18px;
+              height: 18px;
+              accent-color: var(--button);
+          }
+
+          #displayArea {
+              margin-top: 10px;
+              display: flex;
+              justify-content: center;
+          }
+
+          #winner {
+              margin: 0;
+              background: rgba(0, 0, 0, 0.24);
+              padding: 18px 26px;
+              border-radius: 20px;
+              border: 1px solid rgba(255, 255, 255, 0.16);
+              color: #fff;
+              font-size: 1.55rem;
+              line-height: 1.4;
+              max-width: 100%;
+              box-shadow: inset 0 0 20px rgba(255, 255, 255, 0.08);
+          }
+
+          #result {
+              min-width: 220px;
+              min-height: 180px;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              margin: 0 auto;
+              font-size: 5rem;
+              font-weight: 800;
+              text-shadow: 0 0 25px rgba(255, 255, 255, 0.85);
+              background: rgba(0, 0, 0, 0.22);
+              border-radius: 24px;
+              border: 1px solid rgba(255, 255, 255, 0.12);
+              box-shadow: inset 0 16px 40px rgba(0, 0, 0, 0.2);
+              transition: transform 0.2s ease;
+          }
+
+      .spinDice {
+          animation: rotateDice 0.5s linear infinite;
+      }
+
+      #nameSpinner,
+      #numberSpinner {
+          display: flex;
+          justify-content: center;
+          margin-top: 14px;
+      }
+
+      #nameSpinner[hidden],
+      #numberSpinner[hidden] {
+          display: none !important;
+      }
+
+      #nameSpinner picture,
+      #numberSpinner picture {
+          display: block;
+      }
+
+      #nameSpinner picture img,
+      #numberSpinner picture img {
+          width: 32px;
+          height: 32px;
+      }
+
+      @keyframes rotateDice {
+          0% { transform: rotate(0deg) scale(1); }
+          50% { transform: rotate(180deg) scale(1.05); }
+          100% { transform: rotate(360deg) scale(1); }
+      }
+
+      .flash {
+          animation: flash 0.6s ease forwards;
+      }
+
+      @keyframes flash {
+          0% { transform: scale(0.8); opacity: 0.2; }
+          50% { transform: scale(1.15); opacity: 1; }
+          100% { transform: scale(1); opacity: 1; }
+      }
+
+              button {
+                  min-width: 0;
+              }
+          }
+    </style>
+  </head>
+  <body>
+    <main>
+      <header>
+        <h1>Lucky Draw</h1>
+        <p>
+          Enter names to pick a winner or use the number spinner for a quick
+          random draw.
+        </p>
+      </header>
+
+      <section>
+        <h2 class="section-title">Name-based Lucky Draw</h2>
+        <div id="controls">
+          <textarea id="nameInput" placeholder="Enter names here..."></textarea>
+          <div class="button-row">
+            <button id="castBtn">Cast to TV</button>
+            <button id="drawBtn" onclick="triggerDraw()">
+              Start Lucky Draw
+            </button>
+          </div>
+        </div>
+        <div id="displayArea">
+          <h2 id="winner">
+            Who is the winner?
+            <div id="nameSpinner" hidden>
+              <picture>
+                <source
+                  srcset="
+                    https://fonts.gstatic.com/s/e/notoemoji/latest/1f941/512.webp
+                  "
+                  type="image/webp"
+                />
+                <img
+                  src="https://fonts.gstatic.com/s/e/notoemoji/latest/1f941/512.gif"
+                  alt="🥁"
+                  width="32"
+                  height="32"
+                />
+              </picture>
+            </div>
+          </h2>
+        </div>
+      </section>
+
+      <section>
+        <h2 class="section-title">Number Spinner</h2>
+        <div class="form-row">
+          <input type="number" id="maxValue" placeholder="Enter X" min="1" />
+          <button id="spinBtn">SPIN</button>
+        </div>
+        <div class="controls">
+          <label
+            ><input type="checkbox" id="soundToggle" checked /> Sound</label
+          >
+        </div>
+        <div id="result">🎲</div>
+        <div id="numberSpinner" hidden style="display: none">
+          <picture>
+            <source
+              srcset="
+                https://fonts.gstatic.com/s/e/notoemoji/latest/1f3b2/512.webp
+              "
+              type="image/webp"
+            />
+            <img
+              src="https://fonts.gstatic.com/s/e/notoemoji/latest/1f3b2/512.gif"
+              alt="🎲"
+              width="32"
+              height="32"
+            />
+          </picture>
+        </div>
+      </section>
+    </main>
 
     <script>
-        let audioCtx;
+      let presentationConnection;
+      const castBtn = document.getElementById("castBtn");
+      const nameInput = document.getElementById("nameInput");
 
-        function initAudio() {
-            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      const presentationRequest = new PresentationRequest(["./index.html"]);
+      const nameSpinner = document.getElementById("nameSpinner");
+      const numberSpinner = document.getElementById("numberSpinner");
+
+      castBtn.addEventListener("click", () => {
+        presentationRequest
+          .start()
+          .then((connection) => {
+            presentationConnection = connection;
+            castBtn.textContent = "Connected to TV";
+            castBtn.classList.add("connected");
+            syncData();
+          })
+          .catch((err) => console.log("Cast cancelled or failed", err));
+      });
+
+      function syncData() {
+        if (
+          presentationConnection &&
+          presentationConnection.state === "connected"
+        ) {
+          presentationConnection.send(
+            JSON.stringify({
+              type: "SYNC_NAMES",
+              names: nameInput.value,
+            }),
+          );
         }
+      }
 
-        function playTick() {
-            initAudio();
-            const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
-            osc.type = 'square';
-            osc.frequency.setValueAtTime(200 + Math.random() * 400, audioCtx.currentTime);
-            osc.connect(gain);
-            gain.connect(audioCtx.destination);
-            gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.1);
-            osc.start();
-            osc.stop(audioCtx.currentTime + 0.1);
+      nameInput.addEventListener("input", syncData);
+
+      function triggerDraw() {
+        const winner = performDraw();
+        if (presentationConnection && winner) {
+          presentationConnection.send(
+            JSON.stringify({ type: "WINNER", winner }),
+          );
         }
+      }
 
-        function playDrumRoll() {
-            initAudio();
-            const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
-            osc.type = 'triangle';
-            osc.frequency.setValueAtTime(100, audioCtx.currentTime);
-            osc.frequency.exponentialRampToValueAtTime(800, audioCtx.currentTime + 1);
-            osc.connect(gain);
-            gain.connect(audioCtx.destination);
-            gain.gain.setValueAtTime(0.4, audioCtx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 1);
-            osc.start();
-            osc.stop(audioCtx.currentTime + 1);
+      let rollingInterval = null;
+      if (navigator.presentation && navigator.presentation.receiver) {
+        document.getElementById("controls").style.display = "none";
+        const spinnerControls = document.querySelector(".form-row");
+        if (spinnerControls) {
+          spinnerControls.style.display = "none";
         }
-
-        function playJackpot() {
-            initAudio();
-            const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
-            osc.type = 'sawtooth';
-            osc.frequency.setValueAtTime(900, audioCtx.currentTime);
-            osc.connect(gain);
-            gain.connect(audioCtx.destination);
-            gain.gain.setValueAtTime(0.5, audioCtx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.8);
-            osc.start();
-            osc.stop(audioCtx.currentTime + 0.8);
-        }
-
-        const diceFaces = ["🎲","⚀","⚁","⚂","⚃","⚄","⚅"];
-
-        function generateNumber() {
-            const max = parseInt(document.getElementById("maxValue").value, 10);
-            if (isNaN(max) || max < 1) {
-                alert("Enter valid number > 0");
-                return;
-            }
-
-            const result = document.getElementById("result");
-            result.classList.add("spinDice");
-
-            let spinTime = 0;
-            const diceInterval = setInterval(() => {
-                result.textContent = diceFaces[Math.floor(Math.random() * diceFaces.length)];
-                if (document.getElementById("soundToggle").checked) playTick();
-                spinTime += 100;
-
-                if (spinTime >= 5000) {
-                    clearInterval(diceInterval);
-                    result.classList.remove("spinDice");
-
-                    if (document.getElementById("soundToggle").checked) playDrumRoll();
-
-                    setTimeout(() => {
-                        const randomNumber = Math.floor(Math.random() * max) + 1;
-                        result.textContent = randomNumber;
-                        result.classList.add("flash");
-
-                        if (document.getElementById("soundToggle").checked) playJackpot();
-                        setTimeout(() => result.classList.remove("flash"), 800);
-                    }, 1000);
+        navigator.presentation.receiver.connectionList.then((list) => {
+          list.connections.forEach((connection) => {
+            connection.onmessage = (event) => {
+              const data = JSON.parse(event.data);
+              if (data.type === "SYNC_NAMES") {
+                nameInput.value = data.names;
+              }
+              if (data.type === "WINNER") {
+                const winnerDisplay = document.getElementById("winner");
+                if (rollingInterval) {
+                  clearInterval(rollingInterval);
+                  rollingInterval = null;
                 }
-            }, 100);
-        }
+                winnerDisplay.textContent = "Drawing...";
+                nameSpinner.hidden = false;
+                winnerDisplay.classList.add("spinDice");
+                rollingInterval = setTimeout(() => {
+                  winnerDisplay.classList.remove("spinDice");
+                  nameSpinner.hidden = true;
+                  winnerDisplay.textContent = "Winner: " + data.winner;
+                  rollingInterval = null;
+                }, 2000);
+              }
+            };
+          });
+        });
+      }
 
-        document.getElementById('spinBtn').addEventListener('click', generateNumber);
+      function performDraw() {
+        const names = nameInput.value
+          .split("\n")
+          .filter((n) => n.trim() !== "");
+        if (names.length === 0) return null;
+        const winnerDisplay = document.getElementById("winner");
+        nameSpinner.hidden = false;
+        const randomIndex = Math.floor(Math.random() * names.length);
+        const winner = names[randomIndex];
+        setTimeout(() => {
+          winnerDisplay.classList.remove("spinDice");
+          nameSpinner.hidden = true;
+          winnerDisplay.textContent = "Winner: " + winner;
+        }, 2000);
+        return winner;
+      }
+
+      let audioCtx;
+      function initAudio() {
+        if (!audioCtx)
+          audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+
+      function playTick() {
+        initAudio();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = "square";
+        osc.frequency.setValueAtTime(
+          200 + Math.random() * 400,
+          audioCtx.currentTime,
+        );
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(
+          0.001,
+          audioCtx.currentTime + 0.1,
+        );
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.1);
+      }
+
+      function playDrumRoll() {
+        initAudio();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = "triangle";
+        osc.frequency.setValueAtTime(100, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(
+          800,
+          audioCtx.currentTime + 1,
+        );
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        gain.gain.setValueAtTime(0.4, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 1);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 1);
+      }
+
+      function playJackpot() {
+        initAudio();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = "sawtooth";
+        osc.frequency.setValueAtTime(900, audioCtx.currentTime);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        gain.gain.setValueAtTime(0.5, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(
+          0.001,
+          audioCtx.currentTime + 0.8,
+        );
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.8);
+      }
+
+      const diceFaces = ["🎲", "⚀", "⚁", "⚂", "⚃", "⚄", "⚅"];
+
+      function generateNumber() {
+        const max = parseInt(document.getElementById("maxValue").value, 10);
+        if (isNaN(max) || max < 1) {
+          alert("Enter valid number > 0");
+          return;
+        }
+        const result = document.getElementById("result");
+        const spinner = document.getElementById("numberSpinner");
+        spinner.hidden = false;
+        result.innerHTML = `<picture>
+              <source srcset="https://fonts.gstatic.com/s/e/notoemoji/latest/1f3b2/512.webp" type="image/webp">
+              <img src="https://fonts.gstatic.com/s/e/notoemoji/latest/1f3b2/512.gif" alt="🎲" width="96" height="96">
+            </picture>`;
+        let spinTime = 0;
+        const spinInterval = setInterval(() => {
+          if (document.getElementById("soundToggle").checked) playTick();
+          spinTime += 100;
+          if (spinTime >= 2500) {
+            clearInterval(spinInterval);
+            spinner.hidden = true;
+            if (document.getElementById("soundToggle").checked) playDrumRoll();
+            setTimeout(() => {
+              const randomNumber = Math.floor(Math.random() * max) + 1;
+              result.textContent = randomNumber;
+              result.classList.add("flash");
+              if (document.getElementById("soundToggle").checked) playJackpot();
+              setTimeout(() => result.classList.remove("flash"), 800);
+            }, 300);
+          }
+        }, 100);
+      }
+
+      document
+        .getElementById("spinBtn")
+        .addEventListener("click", generateNumber);
     </script>
-</body>
+  </body>
 </html>
