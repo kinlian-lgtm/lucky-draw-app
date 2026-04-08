@@ -357,15 +357,23 @@
       const numberSpinner = document.getElementById("numberSpinner");
 
       castBtn.addEventListener("click", () => {
-        presentationRequest
-          .start()
-          .then((connection) => {
-            presentationConnection = connection;
-            castBtn.textContent = "Connected: TV";
-            castBtn.classList.add("connected");
-            syncData();
-          })
-          .catch((err) => console.log("Cast cancelled or failed", err));
+        presentationRequest.getAvailability().then((availability) => {
+          if (!availability.value) {
+            alert(
+              "No castable destination available. Please ensure a compatible display (e.g., TV) is connected and available.",
+            );
+            return;
+          }
+          presentationRequest
+            .start()
+            .then((connection) => {
+              presentationConnection = connection;
+              castBtn.textContent = "Connected: TV";
+              castBtn.classList.add("connected");
+              syncData();
+            })
+            .catch((err) => console.log("Cast cancelled or failed", err));
+        });
       });
 
       function syncData() {
