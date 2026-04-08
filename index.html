@@ -4,292 +4,196 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>🎰 Casino Lucky Draw 🎰</title>
-
 <style>
-body {
-    font-family: Arial, sans-serif;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    height: 100vh;
-    margin: 0;
-    background: radial-gradient<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lucky Draw - Cast Edition</title>
-    <style>
-        /* Basic styling for the Cast Button */
-        #castBtn {
-            background-color: #4285f4;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 5px;
-            cursor: pointer;
-            margin: 10px;
-        }
-        #castBtn.connected { background-color: #0f9d58; }
-    </style>
-</head>
-<body>
+    body {
+        font-family: Arial, sans-serif;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+        margin: 0;
+        background: radial-gradient(circle at top, #ffda4d 0%, #d33 50%, #000 100%);
+        color: gold;
+        text-align: center;
+    }
 
-    <div id="controls">
-        <button id="castBtn">Cast to TV</button>
-        <textarea id="nameInput" placeholder="Enter names here..."></textarea>
-        <button id="drawBtn" onclick="triggerDraw()">Start Lucky Draw</button>
-    </div>
+    h1 {
+        margin: 0 0 24px;
+        font-size: 3rem;
+        text-shadow: 0 0 15px rgba(255, 215, 0, 0.8);
+    }
 
-    <div id="displayArea">
-        <h1 id="winner">Who is the winner?</h1>
-    </div>
+    .form-row {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        margin-bottom: 16px;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
 
-    <script>
-        let presentationConnection;
-        const castBtn = document.getElementById('castBtn');
-        const nameInput = document.getElementById('nameInput');
+    input[type="number"] {
+        padding: 12px 14px;
+        font-size: 1rem;
+        width: 180px;
+        border-radius: 12px;
+        border: none;
+        outline: none;
+        box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.2);
+    }
 
-        // --- 1. SENDER LOGIC (Phone) ---
-        const presentationRequest = new PresentationRequest(['./index.html']);
+    button {
+        padding: 12px 24px;
+        font-size: 1rem;
+        border: none;
+        border-radius: 12px;
+        cursor: pointer;
+        background: gold;
+        color: black;
+        font-weight: bold;
+        box-shadow: 0 0 20px rgba(255, 215, 0, 0.6);
+    }
 
-        castBtn.addEventListener('click', () => {
-            presentationRequest.start()
-                .then(connection => {
-                    presentationConnection = connection;
-                    castBtn.textContent = "Connected to TV";
-                    castBtn.classList.add('connected');
-                    
-                    // Sync current names immediately upon connection
-                    syncData();
-                })
-                .catch(err => console.log('Cast cancelled or failed', err));
-        });
+    .controls {
+        margin-bottom: 24px;
+        font-size: 1rem;
+    }
 
-        function syncData() {
-            if (presentationConnection && presentationConnection.state === 'connected') {
-                presentationConnection.send(JSON.stringify({
-                    type: 'SYNC_NAMES',
-                    names: nameInput.value
-                }));
-            }
-        }
+    #result {
+        min-width: 220px;
+        min-height: 180px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-top: 16px;
+        font-size: 5rem;
+        font-weight: bold;
+        text-shadow: 0 0 25px gold, 0 0 50px crimson;
+    }
 
-        // Auto-sync when user types names
-        nameInput.addEventListener('input', syncData);
+    .spinDice {
+        animation: rotateDice 0.5s linear infinite;
+    }
 
-        function triggerDraw() {
-            // Local draw logic
-            performDraw();
+    @keyframes rotateDice {
+        0% { transform: rotate(0deg) scale(1); }
+        50% { transform: rotate(180deg) scale(1.15); }
+        100% { transform: rotate(360deg) scale(1); }
+    }
 
-            // Tell the TV to draw too
-            if (presentationConnection) {
-                presentationConnection.send(JSON.stringify({ type: 'START_DRAW' }));
-            }
-        }
+    .flash {
+        animation: flash 0.6s ease;
+    }
 
-        // --- 2. RECEIVER LOGIC (TV) ---
-        if (navigator.presentation && navigator.presentation.receiver) {
-            // Hide controls on the TV screen for a cleaner look
-            document.getElementById('controls').style.display = 'none';
-
-            navigator.presentation.receiver.connectionList.then(list => {
-                list.connections.forEach(connection => {
-                    connection.onmessage = (event) => {
-                        const data = JSON.parse(event.data);
-                        if (data.type === 'SYNC_NAMES') {
-                            nameInput.value = data.names;
-                        }
-                        if (data.type === 'START_DRAW') {
-                            performDraw();
-                        }
-                    };
-                });
-            });
-        }
-
-        // --- 3. CORE APP LOGIC (The actual drawing) ---
-        function performDraw() {
-            const names = nameInput.value.split('\n').filter(n => n.trim() !== '');
-            if (names.length === 0) return;
-            
-            const winnerDisplay = document.getElementById('winner');
-            winnerDisplay.textContent = "Drawing...";
-            
-            setTimeout(() => {
-                const randomIndex = Math.floor(Math.random() * names.length);
-                winnerDisplay.textContent = "Winner: " + names[randomIndex];
-            }, 2000); // 2-second animation delay
-        }
-    </script>
-</body>
-</html>
-circle,#000000,#7b0000,#000000);
-    color: gold;
-    overflow: hidden;
-}
-
-h1 {
-    font-size: 28px;
-    text-shadow: 0 0 15px gold;
-}
-
-input {
-    padding: 10px;
-    font-size: 18px;
-    width: 140px;
-    text-align: center;
-    border-radius: 10px;
-    border: none;
-}
-
-button {
-    padding: 12px 24px;
-    font-size: 20px;
-    border: none;
-    border-radius: 12px;
-    cursor: pointer;
-    background: gold;
-    color: black;
-    margin-left: 10px;
-    font-weight: bold;
-    box-shadow: 0 0 20px gold;
-}
-
-#result {
-    margin-top: 50px;
-    font-size: 150px;
-    font-weight: bold;
-    text-align: center;
-    color: gold;
-    text-shadow: 0 0 25px gold, 0 0 50px red;
-}
-
-.spinDice {
-    animation: rotateDice 0.5s linear infinite;
-}
-
-@keyframes rotateDice {
-    0% { transform: rotate(0deg) scale(1); }
-    50% { transform: rotate(180deg) scale(1.3); }
-    100% { transform: rotate(360deg) scale(1); }
-}
-
-.flash {
-    animation: flash 0.6s ease;
-}
-
-@keyframes flash {
-    0% { transform: scale(0.2); opacity: 0; }
-    70% { transform: scale(1.4); }
-    100% { transform: scale(1); opacity: 1; }
-}
-
-.controls { margin-top: 15px; }
+    @keyframes flash {
+        0% { transform: scale(0.2); opacity: 0; }
+        70% { transform: scale(1.4); }
+        100% { transform: scale(1); opacity: 1; }
+    }
 </style>
 </head>
 <body>
+    <h1>LUCKY DRAW</h1>
 
-<h1>LUCKY DRAW</h1>
+    <div class="form-row">
+        <input type="number" id="maxValue" placeholder="Enter X" min="1">
+        <button id="spinBtn">SPIN</button>
+    </div>
 
-<div>
-    <input type="number" id="maxValue" placeholder="Enter X" min="1">
-    <button onclick="generateNumber()">SPIN</button>
-</div>
+    <div class="controls">
+        <label><input type="checkbox" id="soundToggle" checked> Sound</label>
+    </div>
 
-<div class="controls">
-    <label><input type="checkbox" id="soundToggle" checked> Sound</label>
-</div>
+    <div id="result">🎲</div>
 
-<div id="result">🎲</div>
+    <script>
+        let audioCtx;
 
-<script>
-let audioCtx;
-
-function initAudio() {
-    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-}
-
-function playTick() {
-    initAudio();
-    const osc = audioCtx.createOscillator();
-    const gain = audioCtx.createGain();
-    osc.type = 'square';
-    osc.frequency.setValueAtTime(200 + Math.random()*400, audioCtx.currentTime);
-    osc.connect(gain);
-    gain.connect(audioCtx.destination);
-    gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.1);
-    osc.start();
-    osc.stop(audioCtx.currentTime + 0.1);
-}
-
-function playDrumRoll() {
-    initAudio();
-    const osc = audioCtx.createOscillator();
-    const gain = audioCtx.createGain();
-    osc.type = 'triangle';
-    osc.frequency.setValueAtTime(100, audioCtx.currentTime);
-    osc.frequency.exponentialRampToValueAtTime(800, audioCtx.currentTime + 1);
-    osc.connect(gain);
-    gain.connect(audioCtx.destination);
-    gain.gain.setValueAtTime(0.4, audioCtx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 1);
-    osc.start();
-    osc.stop(audioCtx.currentTime + 1);
-}
-
-function playJackpot() {
-    initAudio();
-    const osc = audioCtx.createOscillator();
-    const gain = audioCtx.createGain();
-    osc.type = 'sawtooth';
-    osc.frequency.setValueAtTime(900, audioCtx.currentTime);
-    osc.connect(gain);
-    gain.connect(audioCtx.destination);
-    gain.gain.setValueAtTime(0.5, audioCtx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.8);
-    osc.start();
-    osc.stop(audioCtx.currentTime + 0.8);
-}
-
-const diceFaces = ["🎲","⚀","⚁","⚂","⚃","⚄","⚅"];
-
-function generateNumber() {
-    const max = parseInt(document.getElementById("maxValue").value);
-    if (isNaN(max) || max < 1) {
-        alert("Enter valid number > 0");
-        return;
-    }
-
-    const result = document.getElementById("result");
-    result.classList.add("spinDice");
-
-    let spinTime = 0;
-
-    const diceInterval = setInterval(() => {
-        result.textContent = diceFaces[Math.floor(Math.random()*diceFaces.length)];
-        if (document.getElementById("soundToggle").checked) playTick();
-        spinTime += 100;
-
-        if (spinTime >= 5000) {
-            clearInterval(diceInterval);
-            result.classList.remove("spinDice");
-
-            if (document.getElementById("soundToggle").checked) playDrumRoll();
-
-            setTimeout(() => {
-                const randomNumber = Math.floor(Math.random() * max) + 1;
-                result.textContent = randomNumber;
-                result.classList.add("flash");
-
-                if (document.getElementById("soundToggle").checked) playJackpot();
-            }, 1000);
+        function initAudio() {
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         }
-    }, 100);
-}
-</script>
 
+        function playTick() {
+            initAudio();
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'square';
+            osc.frequency.setValueAtTime(200 + Math.random() * 400, audioCtx.currentTime);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.1);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.1);
+        }
+
+        function playDrumRoll() {
+            initAudio();
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(100, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(800, audioCtx.currentTime + 1);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            gain.gain.setValueAtTime(0.4, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 1);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 1);
+        }
+
+        function playJackpot() {
+            initAudio();
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(900, audioCtx.currentTime);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            gain.gain.setValueAtTime(0.5, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.8);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.8);
+        }
+
+        const diceFaces = ["🎲","⚀","⚁","⚂","⚃","⚄","⚅"];
+
+        function generateNumber() {
+            const max = parseInt(document.getElementById("maxValue").value, 10);
+            if (isNaN(max) || max < 1) {
+                alert("Enter valid number > 0");
+                return;
+            }
+
+            const result = document.getElementById("result");
+            result.classList.add("spinDice");
+
+            let spinTime = 0;
+            const diceInterval = setInterval(() => {
+                result.textContent = diceFaces[Math.floor(Math.random() * diceFaces.length)];
+                if (document.getElementById("soundToggle").checked) playTick();
+                spinTime += 100;
+
+                if (spinTime >= 5000) {
+                    clearInterval(diceInterval);
+                    result.classList.remove("spinDice");
+
+                    if (document.getElementById("soundToggle").checked) playDrumRoll();
+
+                    setTimeout(() => {
+                        const randomNumber = Math.floor(Math.random() * max) + 1;
+                        result.textContent = randomNumber;
+                        result.classList.add("flash");
+
+                        if (document.getElementById("soundToggle").checked) playJackpot();
+                        setTimeout(() => result.classList.remove("flash"), 800);
+                    }, 1000);
+                }
+            }, 100);
+        }
+
+        document.getElementById('spinBtn').addEventListener('click', generateNumber);
+    </script>
 </body>
 </html>
