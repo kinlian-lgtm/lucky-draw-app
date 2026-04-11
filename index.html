@@ -359,9 +359,9 @@
       castBtn.addEventListener("click", () => {
         presentationRequest.getAvailability().then((availability) => {
           if (!availability.value) {
-            alert(
-              "No castable destination available. Please ensure a compatible display (e.g., TV) is connected and available.",
-            );
+            // Retry by simulating another button click after a short delay
+            castBtn.textContent = "Searching for displays...";
+            setTimeout(() => castBtn.click(), 1500);
             return;
           }
           presentationRequest
