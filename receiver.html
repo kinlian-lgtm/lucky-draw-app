@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Receiver Display</title>
+    <style>
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background: linear-gradient(135deg, #1f1c2c, #928dab);
+        color: #f4f4f8;
+        font-family: "Segoe UI", system-ui, sans-serif;
+      }
+
+      .receiver-shell {
+        /* width: min(960px, 90vw);
+        padding: 32px;
+        border-radius: 16px;
+        background: rgba(0, 0, 0, 0.4);
+        backdrop-filter: blur(16px);
+        box-shadow: 0 25px 40px rgba(0, 0, 0, 0.35); */
+        width: 100vw;
+        padding: 10px;
+        text-align: center;
+      }
+
+      h1 {
+        margin: 0 0 16px;
+        font-size: 1.75rem;
+      }
+
+      #status {
+        margin-bottom: 20px;
+        font-size: 1rem;
+        min-height: 26px;
+      }
+
+      #status.pending {
+        color: #f6c244;
+      }
+
+      #status.success {
+        color: #4dd17b;
+      }
+
+      #status.error {
+        color: #ff6b6b;
+      }
+
+      #receiverPlayer {
+        width: 100%;
+        /* height: 360px; */
+        aspect-ratio: 16 / 9;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 12px 24px rgba(0, 0, 0, 0.35);
+        background: black;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="receiver-shell">
+      <div id="receiverPlayer"></div>
+      <h1>Receiver Display</h1>
+      <div id="status" class="pending">Waiting for controller...</div>
+    </div>
+
+    <script>
+      const statusEl = document.getElementById("status");
+      const youtubeVideoId = "to9mM7JeWg0";
+
+      let receiverPlayer = null;
+      let playerReady = false;
+      const pendingPlayerActions = [];
+
+      const commandHandlers = {
+        PLAY: (payload) => {
+          if (typeof payload.currentTime === "number") {
+            receiverPlayer.seekTo(payload.currentTime, true);
+          }
+          receiverPlayer.playVideo();
+          updateStatus("Playing via controller", "success");
+        },
+        PAUSE: (payload) => {
+          if (typeof payload.currentTime === "number") {
+            receiverPlayer.seekTo(payload.currentTime, true);
+          }
+          receiverPlayer.pauseVideo();
+          updateStatus("Paused via controller", "pending");
+        },
+        SEEK: ({ currentTime }) => {
+          if (typeof currentTime === "number") {
+            receiverPlayer.seekTo(currentTime, true);
+          }
+          updateStatus("Seeked via controller", "pending");
+        },
+      };
+
+      window.onYouTubeIframeAPIReady = () => {
+        receiverPlayer = new YT.Player("receiverPlayer", {
+          width: "100%",
+          height: "100%",
+          videoId: youtubeVideoId,
+          playerVars: {
+            rel: 0,
+            modestbranding: 1,
+          },
+          events: {
+            onReady: () => {
+              playerReady = true;
+              flushPendingPlayerActions();
+              updateStatus("Receiver ready", "success");
+            },
+          },
+        });
+      };
+
+      function updateStatus(message, level = "pending") {
+        statusEl.textContent = message;
+        statusEl.className = level;
+      }
+
+      function queuePlayerAction(action) {
+        if (playerReady && receiverPlayer) {
+          action();
+          return;
+        }
+        pendingPlayerActions.push(action);
+      }
+
+      function flushPendingPlayerActions() {
+        while (playerReady && receiverPlayer && pendingPlayerActions.length) {
+          const action = pendingPlayerActions.shift();
+          action();
+        }
+      }
+
+      function handleControlMessage(payload) {
+        if (!payload || typeof payload.type !== "string") {
+          return;
+        }
+
+        const handler = commandHandlers[payload.type];
+        if (handler) {
+          queuePlayerAction(() => handler(payload));
+        }
+      }
+
+      function handleConnection(connection) {
+        connection.onmessage = (event) => {
+          try {
+            const payload = JSON.parse(event.data);
+            handleControlMessage(payload);
+          } catch (err) {
+            console.error("Bad payload from controller", err);
+          }
+        };
+
+        connection.onclose = () => {
+          updateStatus(
+            "Controller disconnected; waiting for a new session",
+            "pending",
+          );
+        };
+
+        connection.onerror = (event) => {
+          console.error("Presentation connection error", event);
+          updateStatus(
+            "Connection error. Try reconnecting from the controller.",
+            "error",
+          );
+        };
+
+        connection.onterminate = () => {
+          console.info("Presentation terminated");
+          updateStatus(
+            "Session terminated; you may reopen the controller",
+            "pending",
+          );
+        };
+      }
+
+      if (!("presentation" in navigator) || !navigator.presentation.receiver) {
+        updateStatus("Presentation Receiver API unavailable", "error");
+      } else {
+        navigator.presentation.receiver.connectionList
+          .then((list) => {
+            list.connections.forEach(handleConnection);
+            list.onconnectionavailable = (event) =>
+              handleConnection(event.connection);
+          })
+          .catch((err) => {
+            console.error("Unable to access connection list", err);
+            updateStatus("Receiver initialization failed", "error");
+          });
+      }
+    </script>
+    <script src="https://www.youtube.com/iframe_api"></script>
+  </body>
+</html>
