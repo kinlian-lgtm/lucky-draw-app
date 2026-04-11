@@ -21,6 +21,7 @@
         border-radius: 10px;
         box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
         text-align: center;
+        width: 800px;
       }
 
       h1 {
@@ -78,9 +79,44 @@
   </head>
   <body>
     <div class="container">
-      <h1>Screen Mirroring Sample</h1>
+      <h1>Screen Casting Sample</h1>
+      <div
+        style="
+          left: 0;
+          width: 100%;
+          height: 0;
+          position: relative;
+          padding-bottom: 56.25%;
+        "
+      >
+        <iframe
+          src="https://www.youtube.com/embed/seTaJa0Xcg8?rel=0&start=0"
+          style="
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            border: 0;
+          "
+          allowfullscreen
+          scrolling="no"
+          allow="
+            accelerometer *;
+            clipboard-write *;
+            encrypted-media *;
+            gyroscope *;
+            picture-in-picture *;
+            web-share *;
+          "
+          referrerpolicy="strict-origin"
+        ></iframe>
+      </div>
+      <br />
       <div class="button-group">
-        <button id="shareButton">Share Your Screen</button>
+        <button id="shareButton" style="display: none">
+          Share Your Screen
+        </button>
         <button id="castButton">Cast to TV/Display</button>
       </div>
       <div id="status"></div>
