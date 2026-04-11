@@ -1,0 +1,321 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Screen Mirroring Sample</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        margin: 0;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      }
+
+      .container {
+        background: white;
+        padding: 40px;
+        border-radius: 10px;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+        text-align: center;
+        width: 800px;
+      }
+
+      h1 {
+        color: #333;
+        margin: 0 0 30px 0;
+        font-size: 28px;
+      }
+
+      button {
+        background-color: #667eea;
+        color: white;
+        border: none;
+        padding: 12px 30px;
+        font-size: 16px;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+      }
+
+      button:hover {
+        background-color: #764ba2;
+      }
+
+      button:active {
+        transform: scale(0.98);
+      }
+
+      #status {
+        margin-top: 20px;
+        font-size: 14px;
+        color: #666;
+        min-height: 20px;
+      }
+
+      #status.success {
+        color: #27ae60;
+      }
+
+      #status.error {
+        color: #e74c3c;
+      }
+
+      .button-group {
+        display: flex;
+        gap: 10px;
+        justify-content: center;
+        flex-wrap: wrap;
+      }
+
+      button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+
+      .video-wrapper {
+        position: relative;
+        width: 100%;
+        padding-bottom: 56.25%;
+        margin-bottom: 30px;
+      }
+
+      .video-wrapper #controllerPlayer {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Screen Casting Sample</h1>
+      <div class="video-wrapper">
+        <div id="controllerPlayer"></div>
+      </div>
+      <br />
+      <div class="button-group">
+        <button id="shareButton" style="display: none">
+          Share Your Screen
+        </button>
+        <button id="castButton">Cast to TV/Display</button>
+      </div>
+      <div id="status"></div>
+    </div>
+
+    <script>
+      const shareButton = document.getElementById("shareButton");
+      const castButton = document.getElementById("castButton");
+      const statusDiv = document.getElementById("status");
+
+      const youtubeVideoId = "seTaJa0Xcg8";
+      const receiverUrl = "./receiver.html";
+      const presentationRequest = new PresentationRequest([receiverUrl]);
+
+      let screenStream = null;
+      let presentationConnection = null;
+      let ytControllerPlayer = null;
+      let playerReady = false;
+      let lastControlTime = 0;
+
+      shareButton.addEventListener("click", startScreenShare);
+      castButton.addEventListener("click", startCastToDisplay);
+
+      window.onYouTubeIframeAPIReady = () => {
+        ytControllerPlayer = new YT.Player("controllerPlayer", {
+          width: "100%",
+          height: "100%",
+          videoId: youtubeVideoId,
+          playerVars: {
+            rel: 0,
+            modestbranding: 1,
+          },
+          events: {
+            onReady: () => {
+              playerReady = true;
+              showStatus("Controller player ready", "success");
+            },
+            onStateChange: handleControllerPlayerStateChange,
+          },
+        });
+      };
+
+      async function startScreenShare() {
+        try {
+          screenStream = await navigator.mediaDevices.getDisplayMedia({
+            video: { cursor: "always" },
+            audio: false,
+          });
+
+          shareButton.textContent = "Stop Sharing";
+          shareButton.removeEventListener("click", startScreenShare);
+          shareButton.addEventListener("click", stopScreenShare);
+          showStatus("Screen sharing active", "success");
+
+          screenStream
+            .getVideoTracks()[0]
+            .addEventListener("ended", stopScreenShare);
+        } catch (error) {
+          handleError(error);
+        }
+      }
+
+      function stopScreenShare() {
+        if (screenStream) {
+          screenStream.getTracks().forEach((track) => track.stop());
+          screenStream = null;
+        }
+
+        shareButton.textContent = "Share Your Screen";
+        shareButton.removeEventListener("click", stopScreenShare);
+        shareButton.addEventListener("click", startScreenShare);
+        showStatus("Screen sharing stopped", "success");
+      }
+
+      function startCastToDisplay() {
+        presentationRequest.getAvailability().then((availability) => {
+          if (!availability.value) {
+            showStatus("Searching for displays...", "");
+            setTimeout(() => castButton.click(), 1500);
+            return;
+          }
+
+          presentationRequest
+            .start()
+            .then((connection) => {
+              presentationConnection = connection;
+              bindConnectionEvents(connection);
+              toggleCastButton(true);
+            })
+            .catch((err) => {
+              if (err.name === "NotAllowedError") {
+                showStatus("You cancelled the cast dialog", "error");
+              } else {
+                showStatus("Cast failed: " + err.message, "error");
+              }
+            });
+        });
+      }
+
+      function stopCastToDisplay() {
+        if (
+          presentationConnection &&
+          presentationConnection.state !== "closed"
+        ) {
+          presentationConnection.terminate();
+        }
+        presentationConnection = null;
+        toggleCastButton(false);
+        showStatus("Casting stopped", "success");
+      }
+
+      function toggleCastButton(isCasting) {
+        castButton.textContent = isCasting
+          ? "Stop Casting"
+          : "Cast to TV/Display";
+        if (isCasting) {
+          castButton.removeEventListener("click", startCastToDisplay);
+          castButton.addEventListener("click", stopCastToDisplay);
+        } else {
+          castButton.removeEventListener("click", stopCastToDisplay);
+          castButton.addEventListener("click", startCastToDisplay);
+        }
+      }
+
+      function bindConnectionEvents(connection) {
+        connection.onconnect = () => {
+          showStatus("Controller connected to Receiver", "success");
+        };
+
+        connection.onmessage = (event) => {
+          try {
+            const payload = JSON.parse(event.data);
+            showStatus(`Receiver says: ${payload.type}`, "");
+          } catch (err) {
+            console.error("Message parsing failed", err);
+          }
+        };
+
+        connection.onclose = (event) => {
+          console.warn("Presentation connection closed", event);
+          stopCastToDisplay();
+        };
+
+        connection.onterminate = () => {
+          console.info("Presentation terminated; cleaning up");
+          stopCastToDisplay();
+        };
+
+        connection.onerror = (event) => {
+          console.error("Presentation connection error", event);
+          showStatus("Receiver disconnected unexpectedly", "error");
+        };
+      }
+
+      function handleControllerPlayerStateChange(event) {
+        if (!playerReady || !ytControllerPlayer) {
+          return;
+        }
+
+        const currentTime = ytControllerPlayer.getCurrentTime();
+        const delta = Math.abs(currentTime - lastControlTime);
+        const state = event.data;
+
+        if (state === YT.PlayerState.BUFFERING && delta > 1) {
+          sendControl("SEEK", { currentTime });
+        }
+
+        if (state === YT.PlayerState.PLAYING) {
+          if (delta > 1.25) {
+            sendControl("SEEK", { currentTime });
+          }
+          sendControl("PLAY", { currentTime });
+        } else if (
+          state === YT.PlayerState.PAUSED ||
+          state === YT.PlayerState.ENDED
+        ) {
+          sendControl("PAUSE", { currentTime });
+        }
+
+        lastControlTime = currentTime;
+      }
+
+      function sendControl(type, extra = {}) {
+        if (
+          !presentationConnection ||
+          presentationConnection.state !== "connected"
+        ) {
+          return;
+        }
+        presentationConnection.send(
+          JSON.stringify({ type, ...extra, timestamp: Date.now() }),
+        );
+      }
+
+      function handleError(error) {
+        let message = "An error occurred";
+        if (error.name === "NotAllowedError") {
+          message = "Permission denied. Please allow screen sharing.";
+        } else if (error.name === "NotFoundError") {
+          message = "No screen capture devices found.";
+        } else if (error.name === "NotSupportedError") {
+          message = "Screen sharing is not supported in your browser.";
+        } else if (error.name === "AbortError") {
+          message = "Screen capture was aborted.";
+        }
+        showStatus(message, "error");
+      }
+
+      function showStatus(message, type) {
+        statusDiv.textContent = message;
+        statusDiv.className = type;
+      }
+    </script>
+    <script src="https://www.youtube.com/iframe_api"></script>
+  </body>
+</html>
